@@ -111,10 +111,45 @@ def shortest_path(source, target):
 
     If no possible path, returns None.
     """
+    startNode = Node(state=source, parent=None, action=None)
+    visitedNodes = set()
+    stack = QueueFrontier()
+    stack.add(startNode)
 
-    # TODO: Implement this function
-    raise NotImplementedError
+    while True:
+        #if link cannot be found, end search and return None
+        if stack.empty() == True:
+            return None
 
+        currentNode = stack.remove()
+
+        #return the path if target is found
+        if currentNode.state == target:
+            path = []
+            while currentNode.parent != None:
+                path.append((currentNode.state, currentNode.action))
+                currentNode = currentNode.parent
+            path.reverse()
+            return path
+            
+        #add visited nodes to visitedNodes
+        visitedNodes.add(currentNode)
+
+        #get neighbours for current node
+        childNodes = neighbors_for_person(currentNode.state)
+
+        for node in childNodes:
+            childNode = Node(state=node[1], parent=currentNode, action=node[0])
+            stack.add(childNode)
+                
+            #return the path if target is found
+            if childNode.state == target:
+                path = []
+                while childNode.parent != None:
+                    path.append((childNode.action, childNode.state))
+                    childNode = childNode.parent
+                path.reverse()
+                return path
 
 def person_id_for_name(name, is_verbose):
     """
