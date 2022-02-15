@@ -141,8 +141,69 @@ def joint_probability(people, one_gene, two_genes, have_trait):
         * everyone in set `have_trait` has the trait, and
         * everyone not in set` have_trait` does not have the trait.
     """
-    raise NotImplementedError
-
+    #initialize values and calculate probabilities for having the gene and having the trait
+    jointP = 1
+    
+    for person in people:
+        numberOfGenes = 0
+        hasTrait = False
+        
+        if person in one_gene:
+            numberOfGenes = 1
+        elif person in two_genes:
+            numberOfGenes = 2
+        if person in have_trait:
+            hasTrait = True
+        pGene = PROBS['gene'][numberOfGenes]
+        pTrait = PROBS['trait'][numberOfGenes][hasTrait]
+        #no parent info
+        if people[person]['mother'] == None:
+            jointP *= pGene * pTrait
+        #parent info
+        else:
+            pParents = {}
+            mother = people[person]['mother']
+            father = people[person]['father']
+            for parent in [mother, father]:
+                #calculate different probalities for combinations (parents giving the gene)
+                geneAmount = 0
+                if parent in one_gene:
+                    geneAmount = 1
+                elif parent in two_genes:
+                    geneAmount = 2
+                
+                if geneAmount == 0:
+                    pParents[parent] = PROBS['mutation']
+                elif geneAmount == 1:
+                    pParents[parent] = 0.5
+                elif geneAmount == 2:
+                    pParents[parent] = 1 - PROBS['mutation']
+            
+            if numberOfGenes == 0:
+                jointP *= (1 - pParents[mother]) * (1 - pParents[father])
+            elif numberOfGenes == 1:
+                jointP *= (1 - pParents[mother]) * pParents[father] + pParents[mother] * (1 - pParents[father])
+            else:
+                jointP *= pParents[mother] * pParents[father]
+            jointP *= pTrait
+            
+    return jointP
+    
+def update(probabilities, one_gene, two_genes, have_trait, p):
+    """
+    Add to `probabilities` a new joint probability `p`.
+    Each person should have their "gene" and "trait" distributions updated.
+    Which value for each distribution is updated depends on whether
+    the person is in `have_gene` and `have_trait`, respectively.
+    """
+    for person in probabilities:
+        numberOfGenes = 0
+        if person in one_gene:
+            numberOfGenes = 1
+        elif person in two_genes:
+            numberOfGenes = 2
+        probabilities[person]["gene"][numberOfGenes] += p
+        probabilities[person]["trait"][person in have_trait] += p
 
 def update(probabilities, one_gene, two_genes, have_trait, p):
     """
@@ -151,7 +212,15 @@ def update(probabilities, one_gene, two_genes, have_trait, p):
     Which value for each distribution is updated depends on whether
     the person is in `have_gene` and `have_trait`, respectively.
     """
-    raise NotImplementedError
+    for person in probabilities:
+        numberOfGenes = 0
+        if person in one_gene:
+            numberOfGenes = 1
+        elif person in two_genes:
+            numberOfGenes = 2
+
+        probabilities[person]["gene"][numberOfGenes] += p
+        probabilities[person]["trait"][person in have_trait] += p
 
 
 def normalize(probabilities):
@@ -159,7 +228,12 @@ def normalize(probabilities):
     Update `probabilities` such that each probability distribution
     is normalized (i.e., sums to 1, with relative proportions the same).
     """
-    raise NotImplementedError
+    for p in probabilities:
+        for var in ['gene', 'trait']:
+            sumOf = sum(probabilities[p][var].values())
+            for val in probabilities[p][var]:
+                newVal = (probabilities[p][var][val]) / sumOf
+                probabilities[p][var][val] = newVal
 
 
 if __name__ == "__main__":
